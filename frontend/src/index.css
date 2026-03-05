@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+  }
+/* Chrome, Safari, Edge */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400;
+  }
+}
+
+@layer components {
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
+           text-white font-medium px-4 py-2 rounded-lg
+           transition-all duration-200 flex items-center gap-2
+           disabled:opacity-60 disabled:cursor-not-allowed
+           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-slate-50 active:bg-slate-100
+           text-slate-700 font-medium px-4 py-2 rounded-lg
+           border border-slate-200 transition-all duration-200
+           flex items-center gap-2
+           focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2;
+  }
+
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 active:bg-red-800
+           text-white font-medium px-4 py-2 rounded-lg
+           transition-all duration-200 flex items-center gap-2
+           focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+  }
+
+  /* ── Form inputs ── */
+  .input-field {
+    @apply w-full border border-slate-200 rounded-lg px-3 py-2.5
+           text-sm text-slate-800 placeholder:text-slate-400
+           focus:outline-none focus:ring-2 focus:ring-indigo-500
+           focus:border-transparent transition-all duration-200 bg-white;
+  }
+
+  /* ── Card ── */
+  .card {
+    @apply bg-white rounded-xl border border-slate-200 shadow-sm;
+  }
+
+  /* ── Section title ── */
+  .section-title {
+    @apply text-lg font-semibold text-slate-800;
+  }
+}
+
+@layer utilities {
+  /* ── Animations ── */
+  .animate-fadeInUp {
+    animation: fadeInUp 0.3s ease forwards;
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease forwards;
+  }
+}
+
+/* ── Keyframes (outside layers so they're always included) ── */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
