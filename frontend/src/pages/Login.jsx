@@ -32,7 +32,14 @@ const Login = () => {
         await login(form.email, form.password);
         toast.success("Welcome back! 👋");
       } else {
-        await register(form);
+        const response = await register(form);
+        if (response.requiresApproval) {
+          toast.success("Registration submitted! Pending approval.");
+          setMode("login");
+          setError("Your account is pending approval. You will be able to login once an administrator approves your registration.");
+          setForm({ name: "", email: "", password: "" });
+          return;
+        }
         toast.success("Account created successfully! 🎉");
       }
       navigate("/");

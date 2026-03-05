@@ -10,6 +10,7 @@ track, and convert business leads from a clean admin dashboard.
 | Feature | Description |
 |---|---|
 | 🔐 **Secure Auth** | JWT-based login with role support (admin / manager / agent) |
+| ✅ **User Approval** | New registrations require admin approval before login |
 | 👥 **User Management** | Admin can manage team members and assign roles |
 | 📋 **Lead Management** | Create, view, edit, archive leads with full details |
 | 🔄 **Status Pipeline** | Advance leads: New → Contacted → Qualified → Converted |
@@ -106,8 +107,41 @@ App will be available at `http://localhost:5173`
 
 ### 4. Create your first admin account
 
+There are two ways to create an admin account:
+
+#### Option A: Using the seed scripts (recommended)
+
+```bash
+cd backend
+node seedHoss.js    # Creates admin user: hoss@gmail.com / Hoss@811
+# OR
+node seedAdmin.js   # Creates admin user: hossam@gmail.com / Hoss@811
+```
+
+If the admin exists but can't login, run:
+```bash
+node fixAdmin.js    # Fixes isActive/isApproved status
+```
+
+#### Option B: Using the UI
+
 Visit `http://localhost:5173/login`, switch to **"Create Account"**,
 fill in your details with role **Admin**, and log in.
+
+---
+
+### 5. User Approval Workflow
+
+New user registrations require admin approval before they can login:
+
+1. **Register**: Users self-register via the "Create Account" tab
+2. **Pending**: New users see "pending approval" message
+3. **Approval**: Admin logs in and goes to Users page
+4. **Filter**: Click "Pending" to see unregistered users
+5. **Action**: Click ✓ to approve or 🗑 to reject
+6. **Login**: Approved users can now login
+
+The first registered user becomes admin automatically.
 
 ---
 
@@ -116,12 +150,15 @@ fill in your details with role **Admin**, and log in.
 ### Auth
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/auth/register` | Register new user (admin only after first user) |
-| POST | `/api/auth/login` | Login & get JWT |
+| POST | `/api/auth/register` | Register new user (public - requires admin approval after first user) |
+| POST | `/api/auth/login` | Login & get JWT (requires approved account) |
 | GET  | `/api/auth/me` | Get current user |
 | PUT  | `/api/auth/updatepassword` | Change password |
 | GET  | `/api/auth/users` | Get all users (admin only) |
 | PUT  | `/api/auth/users/:id/role` | Update user role (admin only) |
+| PUT  | `/api/auth/users/:id/approve` | Approve a user (admin only) |
+| DELETE | `/api/auth/users/:id/reject` | Reject/delete pending user (admin only) |
+| PUT  | `/api/auth/users/:id/activate` | Activate/deactivate user (admin only) |
 
 ### Leads
 | Method | Endpoint | Description |
@@ -150,6 +187,8 @@ fill in your details with role **Admin**, and log in.
 | View analytics | ✅ | ✅ | ✅ |
 | View Archived leads | ✅ | ✅ | ❌ |
 | User Management | ✅ | ❌ | ❌ |
+| **Approve/Reject Users** | ✅ | ❌ | ❌ |
+| **Activate/Deactivate Users** | ✅ | ❌ | ❌ |
 
 ---
 

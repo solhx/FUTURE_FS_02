@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Users as UsersIcon, Shield, ShieldCheck, UserCheck, Search, Plus, Edit2, Check, X } from "lucide-react";
+import { Users as UsersIcon, Shield, ShieldCheck, UserCheck, Search, Edit2, Check, X, ToggleLeft, ToggleRight, Clock, Trash2, Plus } from "lucide-react";
 import api from "../api/axios";
 import Navbar from "../components/layout/Navbar";
 import toast from "react-hot-toast";
@@ -12,6 +11,7 @@ const Users = () => {
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [newRole, setNewRole] = useState("");
+  const [filter, setFilter] = useState("all"); // all, pending, approved
 
   useEffect(() => { fetchUsers(); }, []);
 
@@ -40,10 +40,50 @@ const Users = () => {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleApprove = async (userId) => {
+    try {
+      const { data } = await api.put(`/auth/users/${userId}/approve`);
+      setUsers(users.map(u => u._id === userId ? { ...u, isApproved: true, approvedAt: new Date() } : u));
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to approve user");
+    }
+  };
+
+  const handleReject = async (userId) => {
+    if (!window.confirm("Are you sure you want to reject this registration? This will permanently delete the user.")) {
+      return;
+    }
+    try {
+      const { data } = await api.delete(`/auth/users/${userId}/reject`);
+      setUsers(users.filter(u => u._id !== userId));
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to reject user");
+    }
+  };
+
+  const handleActivate = async (userId, currentStatus) => {
+    try {
+      const { data } = await api.put(`/auth/users/${userId}/activate`, { isActive: !currentStatus });
+      setUsers(users.map(u => u._id === userId ? { ...u, isActive: !currentStatus } : u));
+      toast.success(data.message);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update user status");
+    }
+  };
+
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = 
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase());
+    
+    if (filter === "pending") return matchesSearch && !u.isApproved;
+    if (filter === "approved") return matchesSearch && u.isApproved;
+    return matchesSearch;
+  });
+
+  const pendingCount = users.filter(u => !u.isApproved).length;
 
   const getRoleIcon = (role) => {
     switch (role) {
@@ -62,6 +102,23 @@ const Users = () => {
     return (
       <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${styles[role] || styles.agent} capitalize`}>
         {role}
+      </span>
+    );
+  };
+
+  const getApprovalBadge = (user) => {
+    if (user.isApproved) {
+      return (
+        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-200">
+          <Check className="w-3 h-3" />
+          Approved
+        </span>
+      );
+    }
+    return (
+      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+        <Clock className="w-3 h-3" />
+        Pending
       </span>
     );
   };
@@ -88,18 +145,60 @@ const Users = () => {
             <h1 className="text-2xl font-bold text-slate-800">Users</h1>
             <p className="text-slate-500 mt-1">Manage team members and their roles</p>
           </div>
+          {pendingCount > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+              <Clock className="w-5 h-5 text-amber-600" />
+              <span className="text-sm font-medium text-amber-700">
+                {pendingCount} pending approval{pendingCount > 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="input-field pl-10"
-          />
+        {/* Search and Filter */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-field pl-10"
+            />
+          </div>
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                filter === "all" 
+                  ? "bg-indigo-600 text-white" 
+                  : "bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter("pending")}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-l border-slate-200 ${
+                filter === "pending" 
+                  ? "bg-amber-600 text-white" 
+                  : "bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Pending ({pendingCount})
+            </button>
+            <button
+              onClick={() => setFilter("approved")}
+              className={`px-4 py-2 text-sm font-medium transition-colors border-l border-slate-200 ${
+                filter === "approved" 
+                  ? "bg-green-600 text-white" 
+                  : "bg-white text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              Approved
+            </button>
+          </div>
         </div>
 
         {/* Users Table */}
@@ -110,6 +209,9 @@ const Users = () => {
                 <tr>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     User
+                  </th>
+                  <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    Status
                   </th>
                   <th className="text-left px-5 py-3.5 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                     Role
@@ -127,16 +229,29 @@ const Users = () => {
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {filteredUsers.map((user) => (
-                  <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={user._id} className={`hover:bg-slate-50/50 transition-colors ${!user.isActive ? "opacity-60" : ""}`}>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-indigo-600 font-semibold ${
+                          !user.isApproved ? "bg-amber-100" : "bg-indigo-100"
+                        }`}>
                           {user.name?.[0]?.toUpperCase()}
                         </div>
                         <div>
                           <p className="text-sm font-medium text-slate-800">{user.name}</p>
                           <p className="text-xs text-slate-500">{user.email}</p>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1">
+                        {getApprovalBadge(user)}
+                        {!user.isActive && (
+                          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 border border-red-200 w-fit">
+                            <X className="w-3 h-3" />
+                            Inactive
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-5 py-4">
@@ -178,14 +293,57 @@ const Users = () => {
                       {user.lastLogin ? format(new Date(user.lastLogin), "MMM d, yyyy 'at' h:mm a") : "—"}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      {editingId !== user._id && (
+                      <div className="flex items-center justify-end gap-1">
+                        {/* Approve Button - Only show for pending users */}
+                        {!user.isApproved && (
+                          <button
+                            onClick={() => handleApprove(user._id)}
+                            className="p-2 rounded-lg text-green-600 hover:bg-green-50 transition-colors"
+                            title="Approve user"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        
+                        {/* Reject Button - Only show for pending users */}
+                        {!user.isApproved && (
+                          <button
+                            onClick={() => handleReject(user._id)}
+                            className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                            title="Reject user"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        
+                        {/* Activate/Deactivate Button */}
                         <button
-                          onClick={() => { setEditingId(user._id); setNewRole(user.role); }}
-                          className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                          onClick={() => handleActivate(user._id, user.isActive)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            user.isActive 
+                              ? "text-amber-600 hover:bg-amber-50" 
+                              : "text-green-600 hover:bg-green-50"
+                          }`}
+                          title={user.isActive ? "Deactivate user" : "Activate user"}
                         >
-                          <Edit2 className="w-4 h-4" />
+                          {user.isActive ? (
+                            <ToggleRight className="w-4 h-4" />
+                          ) : (
+                            <ToggleLeft className="w-4 h-4" />
+                          )}
                         </button>
-                      )}
+
+                        {/* Edit Role Button */}
+                        {editingId !== user._id && (
+                          <button
+                            onClick={() => { setEditingId(user._id); setNewRole(user.role); }}
+                            className="p-2 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="Edit role"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -197,7 +355,13 @@ const Users = () => {
             <div className="flex flex-col items-center py-12">
               <UsersIcon className="w-12 h-12 text-slate-300 mb-3" />
               <p className="text-slate-500 font-medium">No users found</p>
-              <p className="text-sm text-slate-400 mt-1">Try adjusting your search</p>
+              <p className="text-sm text-slate-400 mt-1">
+                {filter === "pending" 
+                  ? "No pending registrations" 
+                  : filter === "approved"
+                  ? "No approved users"
+                  : "Try adjusting your search"}
+              </p>
             </div>
           )}
         </div>
