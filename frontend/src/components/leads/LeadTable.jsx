@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Eye, Edit2, Trash2, ChevronUp, ChevronDown,
-  ChevronsUpDown, MoreVertical, Archive,
+  ChevronUp, ChevronDown, ChevronsUpDown,
 } from "lucide-react";
 import { StatusBadge, PriorityBadge, SourceBadge } from "../ui/Badge";
 import { format } from "date-fns";
-import toast from "react-hot-toast";
 
 // ── Sort icon ─────────────────────────────────
 const SortIcon = ({ field, sortBy, sortOrder }) => {
@@ -40,73 +38,15 @@ const STATUS_CYCLE = {
 // ── Main component ────────────────────────────
 const LeadTable = ({
   leads,
-  onDelete,
-  onPermanentDelete,
   onStatusChange,
   sortBy,
   sortOrder,
   onSort,
 }) => {
-  const navigate   = useNavigate();
-  const [openMenu, setOpenMenu] = useState(null);
+  const navigate = useNavigate();
 
   const handleSort = (field) => {
     onSort(field, sortBy === field && sortOrder === "asc" ? "desc" : "asc");
-  };
-
-  const toggleMenu = (id, e) => {
-    e.stopPropagation();
-    setOpenMenu((prev) => (prev === id ? null : id));
-  };
-
-  const closeMenu = () => setOpenMenu(null);
-
-  // ── Confirm permanent delete ───────────────
-  const confirmPermanentDelete = (lead, e) => {
-    e.stopPropagation();
-    closeMenu();
-
-    toast(
-      (t) => (
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold text-white">
-            Permanently delete{" "}
-            <span className="text-red-400">{lead.name}</span>?
-          </p>
-          <p className="text-xs text-slate-400">
-            This action <span className="text-red-400 font-medium">cannot be undone</span>.
-            All notes and data will be lost forever.
-          </p>
-          <div className="flex gap-2 mt-1">
-            <button
-              onClick={() => {
-                toast.dismiss(t.id);
-                onPermanentDelete(lead._id);
-              }}
-              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs
-                         font-medium py-1.5 px-3 rounded-lg transition-colors"
-            >
-              Yes, Delete Forever
-            </button>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200
-                         text-xs font-medium py-1.5 px-3 rounded-lg transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: 8000 }
-    );
-  };
-
-  // ── Confirm archive ────────────────────────
-  const confirmArchive = (lead, e) => {
-    e.stopPropagation();
-    closeMenu();
-    onDelete(lead._id);
   };
 
   // ── Empty state ────────────────────────────
@@ -127,7 +67,7 @@ const LeadTable = ({
 
   // ── Render ─────────────────────────────────
   return (
-    <div className="overflow-x-auto" onClick={closeMenu}>
+    <div className="overflow-x-auto">
       <table className="w-full text-sm">
 
         {/* ══ HEAD ══════════════════════════════ */}
@@ -151,11 +91,6 @@ const LeadTable = ({
                 </span>
               </th>
             ))}
-            {/* Actions column — not sortable */}
-            <th className="px-4 py-3.5 bg-slate-50 text-xs font-bold text-slate-500
-                           uppercase tracking-wider text-right">
-              Actions
-            </th>
           </tr>
         </thead>
 
@@ -243,85 +178,6 @@ const LeadTable = ({
                   <span className="text-slate-300 text-xs">Unassigned</span>
                 )}
               </td>
-
-              {/* ── Actions dropdown ── */}
-              <td
-                className="px-4 py-3.5 text-right whitespace-nowrap"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="relative inline-block">
-                  {/* Three-dot button */}
-                  <button
-                    onClick={(e) => toggleMenu(lead._id, e)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700
-                               hover:bg-slate-100 transition-colors
-                               opacity-0 group-hover:opacity-100 focus:opacity-100"
-                    title="Actions"
-                  >
-                    <MoreVertical className="w-4 h-4" />
-                  </button>
-
-                  {/* Dropdown menu */}
-                  {openMenu === lead._id && (
-                    <div
-                      className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl
-                                 shadow-xl border border-slate-100 z-30 animate-fadeInUp
-                                 overflow-hidden"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {/* View Details */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          closeMenu();
-                          navigate(`/leads/${lead._id}`);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm
-                                   text-slate-600 hover:bg-slate-50 transition-colors"
-                      >
-                        <Eye className="w-4 h-4 text-slate-400" />
-                        View Details
-                      </button>
-
-                      {/* Edit Lead */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          closeMenu();
-                          navigate(`/leads/${lead._id}?edit=true`);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm
-                                   text-slate-600 hover:bg-slate-50 transition-colors"
-                      >
-                        <Edit2 className="w-4 h-4 text-slate-400" />
-                        Edit Lead
-                      </button>
-
-                      <hr className="border-slate-100 my-1" />
-
-                      {/* Archive Lead */}
-                      <button
-                        onClick={(e) => confirmArchive(lead, e)}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm
-                                   text-amber-600 hover:bg-amber-50 transition-colors"
-                      >
-                        <Archive className="w-4 h-4" />
-                        Archive Lead
-                      </button>
-
-                      {/* Permanent Delete */}
-                      <button
-                        onClick={(e) => confirmPermanentDelete(lead, e)}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm
-                                   text-red-600 hover:bg-red-50 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete Forever
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </td>
             </tr>
           ))}
         </tbody>
@@ -331,3 +187,4 @@ const LeadTable = ({
 };
 
 export default LeadTable;
+

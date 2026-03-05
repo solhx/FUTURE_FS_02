@@ -279,8 +279,6 @@ const handlePermanentDelete = async (id) => {
           ) : view === "table" ? (
           <LeadTable
               leads={leads}
-              onDelete={handleDelete}
-              onPermanentDelete={handlePermanentDelete}
               onStatusChange={handleStatusChange}
               sortBy={sortBy}
               sortOrder={sortOrder}

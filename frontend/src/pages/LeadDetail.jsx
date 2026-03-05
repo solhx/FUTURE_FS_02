@@ -366,9 +366,7 @@ const LeadDetail = () => {
               <InfoRow
                 icon={DollarSign}
                 label="Budget"
-                value={`
-$$
-{lead.budget.toLocaleString()}`}
+                value={`${lead.budget.toLocaleString()}`}
               />
             )}
           </div>
@@ -476,8 +474,7 @@ $$
               <div className="bg-slate-50 rounded-xl p-3 text-center">
                 <p className="text-lg font-bold text-slate-800">
                   {lead.budget ? `
-$$
-{lead.budget.toLocaleString()}` : "—"}
+${lead.budget.toLocaleString()}` : "—"}
                 </p>
                 <p className="text-xs text-slate-400 mt-0.5">Budget</p>
               </div>
