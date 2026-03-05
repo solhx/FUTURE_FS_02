@@ -163,4 +163,4 @@ fill in your details with role **Admin**, and log in.
 
 ## 📜 License
 
-MIT © 2026 Mini CRM
+Hossam-Hassan © 2026 Mini CRM
