@@ -105,6 +105,19 @@ const Leads = () => {
     }
   };
 
+const handlePermanentDelete = async (id) => {
+  try {
+    await api.delete(`/leads/${id}/permanent`);
+    toast.success("Lead permanently deleted 🗑️");
+    setLeads((prev) => prev.filter((l) => l._id !== id));
+    setTotal((t) => t - 1);
+  } catch (err) {
+    toast.error(
+      err.response?.data?.message || "Failed to delete lead"
+    );
+  }
+};
+
   const handleSort = (field, order) => {
     setSortBy(field);
     setSortOrder(order);
@@ -264,9 +277,10 @@ const Leads = () => {
               </div>
             </div>
           ) : view === "table" ? (
-            <LeadTable
+          <LeadTable
               leads={leads}
               onDelete={handleDelete}
+              onPermanentDelete={handlePermanentDelete}
               onStatusChange={handleStatusChange}
               sortBy={sortBy}
               sortOrder={sortOrder}

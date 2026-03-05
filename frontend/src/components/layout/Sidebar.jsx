@@ -1,14 +1,15 @@
 import { NavLink } from "react-router-dom";
 import {
-  LayoutDashboard, Users, BarChart3, LogOut,
-  Briefcase, ChevronRight,
+  LayoutDashboard, Users, BarChart3,
+  LogOut, Briefcase, ChevronRight, Archive,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
 const navItems = [
-  { to: "/",         label: "Dashboard",  icon: LayoutDashboard },
-  { to: "/leads",    label: "Leads",      icon: Users           },
-  { to: "/analytics",label: "Analytics",  icon: BarChart3       },
+  { to: "/",          label: "Dashboard",  icon: LayoutDashboard },
+  { to: "/leads",     label: "Leads",      icon: Users           },
+  { to: "/archived",  label: "Archived",   icon: Archive         },
+  { to: "/analytics", label: "Analytics",  icon: BarChart3       },
 ];
 
 const Sidebar = () => {
@@ -40,7 +41,8 @@ const Sidebar = () => {
             to={to}
             end={to === "/"}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 group
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+               transition-all duration-150 group
                ${isActive
                  ? "bg-indigo-600 text-white"
                  : "text-slate-400 hover:text-white hover:bg-slate-800"
@@ -61,7 +63,8 @@ const Sidebar = () => {
       {/* User Profile */}
       <div className="px-3 py-4 border-t border-slate-700/50">
         <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-slate-800 mb-2">
-          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+          <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center
+                          text-white text-sm font-semibold flex-shrink-0">
             {user?.name?.[0]?.toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
@@ -71,7 +74,8 @@ const Sidebar = () => {
         </div>
         <button
           onClick={logout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+                     text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Sign out

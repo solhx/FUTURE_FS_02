@@ -471,5 +471,29 @@ router.patch(
     }
   }
 );
+// ─────────────────────────────────────────────
+// @route   DELETE /api/leads/:id/permanent
+// @desc    Permanently delete a lead (admin only)
+// @access  Private (Admin only)
+// ─────────────────────────────────────────────
+router.delete("/:id/permanent", authorize("admin", "manager"), async (req, res) => {
+  try {
+    const lead = await Lead.findByIdAndDelete(req.params.id);
 
+    if (!lead) {
+      return res.status(404).json({
+        success: false,
+        message: "Lead not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Lead permanently deleted",
+    });
+  } catch (error) {
+    console.error("Permanent delete error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 module.exports = router;

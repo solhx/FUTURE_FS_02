@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, Edit2, MessageSquare, Mail, Phone,
-  Building2, Calendar, DollarSign, Tag, Check, X,
-  Clock, User,
+  Building2, Calendar, DollarSign, Tag, Check,
+  Clock, User, Archive, Trash2, RotateCcw,
 } from "lucide-react";
-import api from "../api/axios";
+import api        from "../api/axios";
 import Navbar     from "../components/layout/Navbar";
 import LeadForm   from "../components/leads/LeadForm";
 import NoteModal  from "../components/leads/NoteModal";
@@ -14,6 +14,7 @@ import Modal      from "../components/ui/Modal";
 import toast      from "react-hot-toast";
 import { format } from "date-fns";
 
+// ── Info row ──────────────────────────────────
 const InfoRow = ({ icon: Icon, label, value }) => {
   if (!value) return null;
   return (
@@ -29,17 +30,20 @@ const InfoRow = ({ icon: Icon, label, value }) => {
   );
 };
 
-const LeadDetail = () => {
-  const { id }              = useParams();
-  const navigate            = useNavigate();
-  const [searchParams]      = useSearchParams();
+const STATUS_OPTIONS = ["new", "contacted", "qualified", "converted", "lost"];
 
-  const [lead,       setLead]       = useState(null);
-  const [isLoading,  setIsLoading]  = useState(true);
-  const [showEdit,   setShowEdit]   = useState(searchParams.get("edit") === "true");
-  const [showNotes,  setShowNotes]  = useState(false);
-  const [isSaving,   setIsSaving]   = useState(false);
-  const [noteLoading,setNoteLoading]= useState(false);
+// ── Main component ────────────────────────────
+const LeadDetail = () => {
+  const { id }         = useParams();
+  const navigate       = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const [lead,        setLead]        = useState(null);
+  const [isLoading,   setIsLoading]   = useState(true);
+  const [showEdit,    setShowEdit]    = useState(searchParams.get("edit") === "true");
+  const [showNotes,   setShowNotes]   = useState(false);
+  const [isSaving,    setIsSaving]    = useState(false);
+  const [noteLoading, setNoteLoading] = useState(false);
 
   useEffect(() => { fetchLead(); }, [id]); // eslint-disable-line
 
@@ -56,6 +60,7 @@ const LeadDetail = () => {
     }
   };
 
+  // ── Update lead ────────────────────────────
   const handleUpdate = async (payload) => {
     try {
       setIsSaving(true);
@@ -70,6 +75,7 @@ const LeadDetail = () => {
     }
   };
 
+  // ── Status change ──────────────────────────
   const handleStatusChange = async (status) => {
     try {
       const { data } = await api.patch(`/leads/${id}/status`, { status });
@@ -80,6 +86,106 @@ const LeadDetail = () => {
     }
   };
 
+  // ── Archive lead ───────────────────────────
+  const handleArchive = () => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-semibold text-white">
+            Archive <span className="text-amber-400">{lead.name}</span>?
+          </p>
+          <p className="text-xs text-slate-400">
+            This lead will be moved to the Archived section.
+            You can restore it at any time.
+          </p>
+          <div className="flex gap-2 mt-1">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await api.delete(`/leads/${id}`);
+                  toast.success("Lead archived successfully");
+                  navigate("/leads");
+                } catch {
+                  toast.error("Failed to archive lead");
+                }
+              }}
+              className="flex-1 bg-amber-500 hover:bg-amber-600 text-white text-xs
+                         font-medium py-1.5 px-3 rounded-lg transition-colors"
+            >
+              Yes, Archive
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200
+                         text-xs font-medium py-1.5 px-3 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 }
+    );
+  };
+
+  // ── Permanent delete ───────────────────────
+  const handlePermanentDelete = () => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-semibold text-white">
+            Permanently delete{" "}
+            <span className="text-red-400">{lead.name}</span>?
+          </p>
+          <p className="text-xs text-slate-400">
+            This action{" "}
+            <span className="text-red-400 font-semibold">cannot be undone</span>.
+            All notes and data will be lost forever.
+          </p>
+          <div className="flex gap-2 mt-1">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id);
+                try {
+                  await api.delete(`/leads/${id}/permanent`);
+                  toast.success("Lead permanently deleted");
+                  navigate("/leads");
+                } catch {
+                  toast.error("Failed to delete lead");
+                }
+              }}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs
+                         font-medium py-1.5 px-3 rounded-lg transition-colors"
+            >
+              Yes, Delete Forever
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-slate-200
+                         text-xs font-medium py-1.5 px-3 rounded-lg transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: 8000 }
+    );
+  };
+
+  // ── Restore (if viewing from archived) ────
+  const handleRestore = async () => {
+    try {
+      await api.put(`/leads/${id}`, { isArchived: false });
+      toast.success("Lead restored successfully! ✅");
+      fetchLead();
+    } catch {
+      toast.error("Failed to restore lead");
+    }
+  };
+
+  // ── Notes ──────────────────────────────────
   const handleAddNote = async (content) => {
     try {
       setNoteLoading(true);
@@ -103,11 +209,13 @@ const LeadDetail = () => {
     }
   };
 
+  // ── Loading ────────────────────────────────
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent
+                          rounded-full animate-spin" />
           <p className="text-sm text-slate-400">Loading lead details...</p>
         </div>
       </div>
@@ -116,30 +224,55 @@ const LeadDetail = () => {
 
   if (!lead) return null;
 
-  const STATUS_OPTIONS = ["new", "contacted", "qualified", "converted", "lost"];
+  const isArchived = lead.isArchived;
 
+  // ── Render ─────────────────────────────────
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Navbar title="Lead Details" />
 
       <main className="flex-1 overflow-y-auto p-6">
-        {/* ── Breadcrumb / Back ── */}
+
+        {/* ── Back button ── */}
         <button
-          onClick={() => navigate("/leads")}
+          onClick={() => navigate(isArchived ? "/archived" : "/leads")}
           className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800
                      transition-colors mb-5"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back to Leads
+          Back to {isArchived ? "Archived Leads" : "Leads"}
         </button>
 
-        {/* ── Hero Card ── */}
+        {/* ── Archived banner ── */}
+        {isArchived && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5
+                          flex items-center justify-between gap-3 animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <Archive className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <p className="text-sm text-amber-700 font-medium">
+                This lead is archived and hidden from the active leads list.
+              </p>
+            </div>
+            <button
+              onClick={handleRestore}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600
+                         hover:bg-amber-700 text-white text-xs font-medium
+                         rounded-lg transition-colors flex-shrink-0"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              Restore Lead
+            </button>
+          </div>
+        )}
+
+        {/* ── Hero card ── */}
         <div className="card p-6 mb-6">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+
             {/* Left — avatar + info */}
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center justify-center
-                              text-white text-2xl font-bold flex-shrink-0">
+              <div className="w-16 h-16 rounded-2xl bg-indigo-600 flex items-center
+                              justify-center text-white text-2xl font-bold flex-shrink-0">
                 {lead.name?.[0]?.toUpperCase()}
               </div>
               <div>
@@ -153,8 +286,9 @@ const LeadDetail = () => {
               </div>
             </div>
 
-            {/* Right — actions */}
-            <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Right — action buttons */}
+            <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+              {/* Notes */}
               <button
                 onClick={() => setShowNotes(true)}
                 className="btn-secondary relative"
@@ -162,34 +296,79 @@ const LeadDetail = () => {
                 <MessageSquare className="w-4 h-4" />
                 Notes
                 {lead.notes?.length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-indigo-600 text-white
-                                   text-xs rounded-full flex items-center justify-center font-bold">
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-indigo-600
+                                   text-white text-xs rounded-full flex items-center
+                                   justify-center font-bold">
                     {lead.notes.length}
                   </span>
                 )}
               </button>
-              <button onClick={() => setShowEdit(true)} className="btn-primary">
-                <Edit2 className="w-4 h-4" />
-                Edit Lead
+
+              {/* Edit */}
+              {!isArchived && (
+                <button
+                  onClick={() => setShowEdit(true)}
+                  className="btn-primary"
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit Lead
+                </button>
+              )}
+
+              {/* Archive / Restore */}
+              {isArchived ? (
+                <button
+                  onClick={handleRestore}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium
+                             text-sm bg-green-50 hover:bg-green-100 text-green-700
+                             border border-green-200 transition-all duration-200"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Restore
+                </button>
+              ) : (
+                <button
+                  onClick={handleArchive}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium
+                             text-sm bg-amber-50 hover:bg-amber-100 text-amber-700
+                             border border-amber-200 transition-all duration-200"
+                >
+                  <Archive className="w-4 h-4" />
+                  Archive
+                </button>
+              )}
+
+              {/* Permanent delete */}
+              <button
+                onClick={handlePermanentDelete}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium
+                           text-sm bg-red-50 hover:bg-red-100 text-red-700
+                           border border-red-200 transition-all duration-200"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
               </button>
             </div>
           </div>
         </div>
 
-        {/* ── Detail Grid ── */}
+        {/* ── Detail grid ── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
           {/* Contact Info */}
           <div className="card p-5">
             <h3 className="section-title mb-2">Contact Information</h3>
-            <InfoRow icon={Mail}      label="Email"   value={lead.email}          />
-            <InfoRow icon={Phone}     label="Phone"   value={lead.phone}          />
-            <InfoRow icon={Building2} label="Company" value={lead.company}        />
-            <InfoRow icon={Tag}       label="Service" value={lead.service}        />
+            <InfoRow icon={Mail}      label="Email"   value={lead.email}   />
+            <InfoRow icon={Phone}     label="Phone"   value={lead.phone}   />
+            <InfoRow icon={Building2} label="Company" value={lead.company} />
+            <InfoRow icon={Tag}       label="Service" value={lead.service} />
             {lead.budget && (
               <InfoRow
                 icon={DollarSign}
                 label="Budget"
-                value={`$${lead.budget.toLocaleString()}`}
+                value={`
+$$
+{lead.budget.toLocaleString()}`}
               />
             )}
           </div>
@@ -235,7 +414,7 @@ const LeadDetail = () => {
             )}
           </div>
 
-                   {/* Status Pipeline */}
+          {/* Status pipeline */}
           <div className="card p-5">
             <h3 className="section-title mb-4">Update Status</h3>
             <div className="space-y-2">
@@ -245,20 +424,23 @@ const LeadDetail = () => {
                 return (
                   <button
                     key={s}
-                    onClick={() => !isActive && handleStatusChange(s)}
-                    disabled={isActive}
+                    onClick={() => !isActive && !isArchived && handleStatusChange(s)}
+                    disabled={isActive || isArchived}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border
                                 text-sm font-medium transition-all duration-200 capitalize
                       ${isActive
                         ? "bg-indigo-600 text-white border-indigo-600 cursor-default shadow-md shadow-indigo-100"
                         : isPast
                           ? "bg-slate-50 text-slate-400 border-slate-100 hover:bg-slate-100 cursor-pointer"
-                          : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 cursor-pointer"
+                          : isArchived
+                            ? "bg-white text-slate-300 border-slate-100 cursor-not-allowed"
+                            : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 cursor-pointer"
                       }`}
                   >
-                    {/* Step indicator */}
+                    {/* Step circle */}
                     <div
-                      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0
+                      className={`w-5 h-5 rounded-full border-2 flex items-center
+                                  justify-center flex-shrink-0
                         ${isActive
                           ? "border-white bg-white/20"
                           : isPast
@@ -267,7 +449,7 @@ const LeadDetail = () => {
                         }`}
                     >
                       {(isActive || isPast) && (
-                        <Check className={`w-3 h-3 ${isActive ? "text-white" : "text-white"}`} />
+                        <Check className="w-3 h-3 text-white" />
                       )}
                     </div>
 
@@ -286,15 +468,60 @@ const LeadDetail = () => {
             {/* Quick stats */}
             <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-xl p-3 text-center">
-                <p className="text-lg font-bold text-slate-800">{lead.notes?.length ?? 0}</p>
+                <p className="text-lg font-bold text-slate-800">
+                  {lead.notes?.length ?? 0}
+                </p>
                 <p className="text-xs text-slate-400 mt-0.5">Notes</p>
               </div>
               <div className="bg-slate-50 rounded-xl p-3 text-center">
                 <p className="text-lg font-bold text-slate-800">
-                  {lead.budget ? `$${lead.budget.toLocaleString()}` : "—"}
+                  {lead.budget ? `
+$$
+{lead.budget.toLocaleString()}` : "—"}
                 </p>
                 <p className="text-xs text-slate-400 mt-0.5">Budget</p>
               </div>
+            </div>
+
+            {/* Danger zone */}
+            <div className="mt-5 pt-4 border-t border-slate-100 space-y-2">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+                Danger Zone
+              </p>
+
+              {/* Archive / Restore */}
+              {isArchived ? (
+                <button
+                  onClick={handleRestore}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl
+                             bg-green-50 hover:bg-green-100 text-green-700 text-sm
+                             font-medium border border-green-200 transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Restore this Lead
+                </button>
+              ) : (
+                <button
+                  onClick={handleArchive}
+                  className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl
+                             bg-amber-50 hover:bg-amber-100 text-amber-700 text-sm
+                             font-medium border border-amber-200 transition-colors"
+                >
+                  <Archive className="w-4 h-4" />
+                  Archive this Lead
+                </button>
+              )}
+
+              {/* Permanent delete */}
+              <button
+                onClick={handlePermanentDelete}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 rounded-xl
+                           bg-red-50 hover:bg-red-100 text-red-700 text-sm
+                           font-medium border border-red-200 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Forever
+              </button>
             </div>
           </div>
         </div>
@@ -306,7 +533,8 @@ const LeadDetail = () => {
               <h3 className="section-title">Recent Notes</h3>
               <button
                 onClick={() => setShowNotes(true)}
-                className="text-sm text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+                className="text-sm text-indigo-600 hover:text-indigo-800
+                           font-medium transition-colors"
               >
                 View all {lead.notes.length} notes →
               </button>
@@ -314,12 +542,16 @@ const LeadDetail = () => {
             <div className="divide-y divide-slate-50">
               {lead.notes.slice(0, 3).map((note) => (
                 <div key={note._id} className="px-6 py-4">
-                  <p className="text-sm text-slate-700 leading-relaxed">{note.content}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed">
+                    {note.content}
+                  </p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center">
                       <User className="w-3 h-3 text-indigo-600" />
                     </div>
-                    <span className="text-xs font-medium text-slate-500">{note.createdByName}</span>
+                    <span className="text-xs font-medium text-slate-500">
+                      {note.createdByName}
+                    </span>
                     <span className="text-slate-300">·</span>
                     <span className="text-xs text-slate-400">
                       {format(new Date(note.createdAt), "MMM d, yyyy 'at' h:mm a")}
