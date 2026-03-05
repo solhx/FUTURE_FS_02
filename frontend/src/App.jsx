@@ -8,6 +8,7 @@ import LeadDetail from "./pages/LeadDetail";
 import Analytics  from "./pages/Analytics";
 import Login      from "./pages/Login";
 import ArchivedLeads from "./pages/ArchivedLeads";
+import Users      from "./pages/Users";
 
 // ── Protected layout wrapper ──────────────────
 const AppLayout = () => {
@@ -82,6 +83,7 @@ const App = () => (
           <Route path="leads/:id" element={<LeadDetail />} />
           <Route path="archived"    element={<ArchivedLeads />} /> 
           <Route path="analytics" element={<Analytics  />} />
+          <Route path="users" element={<Users />} />
         </Route>
 
         {/* Fallback */}

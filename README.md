@@ -10,6 +10,7 @@ track, and convert business leads from a clean admin dashboard.
 | Feature | Description |
 |---|---|
 | 🔐 **Secure Auth** | JWT-based login with role support (admin / manager / agent) |
+| 👥 **User Management** | Admin can manage team members and assign roles |
 | 📋 **Lead Management** | Create, view, edit, archive leads with full details |
 | 🔄 **Status Pipeline** | Advance leads: New → Contacted → Qualified → Converted |
 | 📝 **Notes & Follow-ups** | Add timestamped notes per lead with author tracking |
@@ -115,10 +116,12 @@ fill in your details with role **Admin**, and log in.
 ### Auth
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/register` | Register new user (admin only after first user) |
 | POST | `/api/auth/login` | Login & get JWT |
 | GET  | `/api/auth/me` | Get current user |
 | PUT  | `/api/auth/updatepassword` | Change password |
+| GET  | `/api/auth/users` | Get all users (admin only) |
+| PUT  | `/api/auth/users/:id/role` | Update user role (admin only) |
 
 ### Leads
 | Method | Endpoint | Description |
@@ -143,15 +146,18 @@ fill in your details with role **Admin**, and log in.
 | Create leads | ✅ | ✅ | ✅ |
 | Edit leads | ✅ | ✅ | ✅ |
 | Archive leads | ✅ | ✅ | ❌ |
+| Delete leads | ✅ | ✅ | ❌ |
 | View analytics | ✅ | ✅ | ✅ |
+| View Archived leads | ✅ | ✅ | ❌ |
+| User Management | ✅ | ❌ | ❌ |
 
 ---
 
 ## 🖼️ Screenshots
 
-| Dashboard | Leads Table | Lead Detail | Analytics |
-|---|---|---|---|
-| Summary stats + recent leads | Sortable, filterable table | Full lead info + notes | Charts & breakdowns |
+| Dashboard | Leads Table | Lead Detail | Analytics | Users |
+|---|---|---|---|---|
+| Summary stats + recent leads | Sortable, filterable table | Full lead info + notes | Charts & breakdowns | Team management |
 
 ---
 

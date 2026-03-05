@@ -1,19 +1,23 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Users, BarChart3,
-  LogOut, Briefcase, ChevronRight, Archive,
+  LogOut, Briefcase, ChevronRight, Archive, UserCog,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
-const navItems = [
-  { to: "/",          label: "Dashboard",  icon: LayoutDashboard },
-  { to: "/leads",     label: "Leads",      icon: Users           },
-  { to: "/archived",  label: "Archived",   icon: Archive         },
-  { to: "/analytics", label: "Analytics",  icon: BarChart3       },
-];
-
 const Sidebar = () => {
   const { user, logout } = useAuth();
+
+  const isAgent = user?.role === "agent";
+  const isAdmin = user?.role === "admin";
+
+  const filteredNavItems = [
+    { to: "/",          label: "Dashboard",  icon: LayoutDashboard },
+    { to: "/leads",     label: "Leads",      icon: Users           },
+    ...(isAgent ? [] : [{ to: "/archived",  label: "Archived",   icon: Archive }]),
+    { to: "/analytics", label: "Analytics",  icon: BarChart3       },
+    ...(isAdmin ? [{ to: "/users", label: "Users", icon: UserCog }] : []),
+  ];
 
   return (
     <aside className="w-64 bg-slate-900 min-h-screen flex flex-col">
@@ -35,7 +39,7 @@ const Sidebar = () => {
         <p className="px-3 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
           Navigation
         </p>
-        {navItems.map(({ to, label, icon: Icon }) => (
+        {filteredNavItems.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}

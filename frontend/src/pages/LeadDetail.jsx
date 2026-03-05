@@ -13,6 +13,7 @@ import { StatusBadge, PriorityBadge, SourceBadge } from "../components/ui/Badge"
 import Modal      from "../components/ui/Modal";
 import toast      from "react-hot-toast";
 import { format } from "date-fns";
+import { useAuth } from "../context/AuthContext";
 
 // ── Info row ──────────────────────────────────
 const InfoRow = ({ icon: Icon, label, value }) => {
@@ -37,6 +38,9 @@ const LeadDetail = () => {
   const { id }         = useParams();
   const navigate       = useNavigate();
   const [searchParams] = useSearchParams();
+  const { user }       = useAuth();
+
+  const isAgent = user?.role === "agent";
 
   const [lead,        setLead]        = useState(null);
   const [isLoading,   setIsLoading]   = useState(true);
@@ -253,6 +257,7 @@ const LeadDetail = () => {
                 This lead is archived and hidden from the active leads list.
               </p>
             </div>
+            {!isAgent && (
             <button
               onClick={handleRestore}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600
@@ -262,6 +267,7 @@ const LeadDetail = () => {
               <RotateCcw className="w-3.5 h-3.5" />
               Restore Lead
             </button>
+            )}
           </div>
         )}
 
@@ -316,7 +322,7 @@ const LeadDetail = () => {
               )}
 
               {/* Archive / Restore */}
-              {isArchived ? (
+              {!isAgent && (isArchived ? (
                 <button
                   onClick={handleRestore}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium
@@ -336,9 +342,10 @@ const LeadDetail = () => {
                   <Archive className="w-4 h-4" />
                   Archive
                 </button>
-              )}
+              ))}
 
               {/* Permanent delete */}
+              {!isAgent && (
               <button
                 onClick={handlePermanentDelete}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium
@@ -348,6 +355,7 @@ const LeadDetail = () => {
                 <Trash2 className="w-4 h-4" />
                 Delete
               </button>
+              )}
             </div>
           </div>
         </div>
@@ -481,6 +489,7 @@ ${lead.budget.toLocaleString()}` : "—"}
             </div>
 
             {/* Danger zone */}
+            {!isAgent && (
             <div className="mt-5 pt-4 border-t border-slate-100 space-y-2">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
                 Danger Zone
@@ -520,6 +529,7 @@ ${lead.budget.toLocaleString()}` : "—"}
                 Delete Forever
               </button>
             </div>
+            )}
           </div>
         </div>
 

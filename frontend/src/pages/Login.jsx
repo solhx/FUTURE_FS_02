@@ -14,7 +14,7 @@ const Login = () => {
   const [error,     setError]     = useState("");
 
   const [form, setForm] = useState({
-    name: "", email: "", password: "", role: "admin",
+    name: "", email: "", password: "",
   });
 
   const handleChange = (e) => {
@@ -152,18 +152,6 @@ const Login = () => {
                 </button>
               </div>
             </div>
-
-            {/* Role (register only) */}
-            {mode === "register" && (
-              <div className="animate-fadeIn">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Role</label>
-                <select name="role" value={form.role} onChange={handleChange} className="input-field">
-                  <option value="admin">Admin</option>
-                  <option value="manager">Manager</option>
-                  <option value="agent">Agent</option>
-                </select>
-              </div>
-            )}
 
             {/* Submit */}
             <button
